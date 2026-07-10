@@ -16,6 +16,7 @@ import (
 	"github.com/henrygd/beszel/agent/utils"
 	"github.com/henrygd/beszel/internal/common"
 	"github.com/henrygd/beszel/internal/entities/system"
+	"github.com/henrygd/beszel/internal/entities/systemd"
 	gossh "golang.org/x/crypto/ssh"
 )
 
@@ -48,6 +49,7 @@ type Agent struct {
 	keys                      []gossh.PublicKey                                     // SSH public keys
 	smartManager              *SmartManager                                         // Manages SMART data
 	systemdManager            *systemdManager                                       // Manages systemd services
+	svcCheckManager           *svcCheckManager                                      // 必检服务巡检（CHECK_SERVICES / CHECK_MIDDLEWARE）
 }
 
 // NewAgent creates a new agent with the given data directory for persisting data.
@@ -132,6 +134,8 @@ func NewAgent(dataDir ...string) (agent *Agent, err error) {
 		slog.Debug("Systemd", "err", err)
 	}
 
+	agent.svcCheckManager = newSvcCheckManager()
+
 	agent.smartManager, err = NewSmartManager()
 	if err != nil {
 		slog.Debug("SMART", "err", err)
@@ -187,6 +191,25 @@ func (a *Agent) gatherStats(options common.DataRequestOptions) *system.CombinedD
 		}
 		if a.systemdManager.hasFreshStats {
 			data.SystemdServices = a.systemdManager.getServiceStats(nil, false)
+		}
+	}
+
+	// 必检服务巡检结果作为伪服务合入，失败数并进 Info.Services 触发已有告警
+	if a.svcCheckManager != nil && cacheTimeMs == defaultDataCacheTimeMs {
+		checks := a.svcCheckManager.run()
+		if len(checks) > 0 {
+			data.SystemdServices = append(data.SystemdServices, checks...)
+			var total, failed uint16
+			if len(data.Info.Services) == 2 {
+				total, failed = data.Info.Services[0], data.Info.Services[1]
+			}
+			for _, svc := range checks {
+				total++
+				if svc.State == systemd.StatusFailed {
+					failed++
+				}
+			}
+			data.Info.Services = []uint16{total, failed}
 		}
 	}
 
