@@ -649,12 +649,9 @@ fi
 
 # Determine version to install
 if [ "$VERSION" = "latest" ]; then
-  INSTALL_VERSION=$(curl -s "https://get.beszel.dev/latest-version")
-  if [ -z "$INSTALL_VERSION" ]; then
-    # Fallback to GitHub API
-    API_RELEASE_URL="https://api.github.com/repos/henrygd/beszel/releases/latest"
-    INSTALL_VERSION=$(curl -s "$API_RELEASE_URL" | grep -o '"tag_name": "v[^"]*"' | cut -d'"' -f4 | tr -d 'v')
-  fi
+  # 二改版：直接查 fork 的 GitHub API（不走 get.beszel.dev，它指向官方仓库）
+  API_RELEASE_URL="https://api.github.com/repos/2474481080/beszel/releases/latest"
+  INSTALL_VERSION=$(curl -s "$API_RELEASE_URL" | grep -o '"tag_name": "v[^"]*"' | cut -d'"' -f4 | tr -d 'v')
   if [ -z "$INSTALL_VERSION" ]; then
     echo "Failed to get latest version"
     exit 1
@@ -670,7 +667,7 @@ echo "Downloading beszel-agent v${INSTALL_VERSION}..."
 # Download checksums file
 TEMP_DIR=$(mktemp -d)
 cd "$TEMP_DIR" || exit 1
-CHECKSUM=$(curl -fsSL "$GITHUB_URL/henrygd/beszel/releases/download/v${INSTALL_VERSION}/beszel_${INSTALL_VERSION}_checksums.txt" | grep "$FILE_NAME" | cut -d' ' -f1)
+CHECKSUM=$(curl -fsSL "$GITHUB_URL/2474481080/beszel/releases/download/v${INSTALL_VERSION}/beszel_${INSTALL_VERSION}_checksums.txt" | grep "$FILE_NAME" | cut -d' ' -f1)
 if [ -z "$CHECKSUM" ] || ! echo "$CHECKSUM" | grep -qE "^[a-fA-F0-9]{64}$"; then
   echo "Failed to get checksum or invalid checksum format"
   echo "Try again with --mirror (or --mirror <url>) if GitHub is not reachable."
@@ -678,8 +675,8 @@ if [ -z "$CHECKSUM" ] || ! echo "$CHECKSUM" | grep -qE "^[a-fA-F0-9]{64}$"; then
   exit 1
 fi
 
-if ! curl -fL# --retry 3 --retry-delay 2 --connect-timeout 10 "$GITHUB_URL/henrygd/beszel/releases/download/v${INSTALL_VERSION}/$FILE_NAME" -o "$FILE_NAME"; then
-  echo "Failed to download the agent from $GITHUB_URL/henrygd/beszel/releases/download/v${INSTALL_VERSION}/$FILE_NAME"
+if ! curl -fL# --retry 3 --retry-delay 2 --connect-timeout 10 "$GITHUB_URL/2474481080/beszel/releases/download/v${INSTALL_VERSION}/$FILE_NAME" -o "$FILE_NAME"; then
+  echo "Failed to download the agent from $GITHUB_URL/2474481080/beszel/releases/download/v${INSTALL_VERSION}/$FILE_NAME"
   echo "Try again with --mirror (or --mirror <url>) if GitHub is not reachable."
   rm -rf "$TEMP_DIR"
   exit 1
@@ -1013,6 +1010,29 @@ EOF
   else
     echo "Systemd service file already exists. Skipping creation."
   fi
+
+  # 二改版：必检配置文件 + drop-in（已存在则不覆盖）
+  if [ ! -f /opt/beszel-agent/agent.env ]; then
+    cat >/opt/beszel-agent/agent.env <<'EOF'
+# 必检服务巡检配置，改完执行 systemctl restart beszel-agent 生效
+# 业务 jar：查 进程+端口+nacos注册健康，格式 jar名[:端口][@nacos服务名]
+#CHECK_SERVICES="order-service.jar:8080,pay-service.jar:9090@pay-svc"
+# 数据库/中间件：只查 进程+端口
+#CHECK_MIDDLEWARE="mysql:3306,redis:6379,nginx:80"
+# nacos 地址（不配则 jar 只查进程+端口）
+#NACOS_URL=http://10.0.0.5:8848
+#NACOS_GROUP=DEFAULT_GROUP
+#NACOS_NAMESPACE=
+#NACOS_USERNAME=
+#NACOS_PASSWORD=
+EOF
+    chmod 600 /opt/beszel-agent/agent.env
+  fi
+  mkdir -p /etc/systemd/system/beszel-agent.service.d
+  cat >/etc/systemd/system/beszel-agent.service.d/checks.conf <<'EOF'
+[Service]
+EnvironmentFile=-/opt/beszel-agent/agent.env
+EOF
 
   # Load and start the service
   printf "\nLoading and starting the agent service...\n"

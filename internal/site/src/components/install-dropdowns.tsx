@@ -47,12 +47,17 @@ export function copyDockerRun(port = "45876", publicKey: string, token: string) 
 	)
 }
 
+// 二改版：Linux 安装脚本走 fork 仓库（安装含必检功能的 agent）
+const FORK_SCRIPT_URL = "https://raw.githubusercontent.com/2474481080/beszel/ops-custom/supplemental/scripts/install-agent.sh"
+// 大陆网络用 jsdelivr CDN 拉同一个脚本
+const FORK_SCRIPT_URL_CN = "https://cdn.jsdelivr.net/gh/2474481080/beszel@ops-custom/supplemental/scripts/install-agent.sh"
+
 export function copyLinuxCommand(port = "45876", publicKey: string, token: string, brew = false) {
-	let cmd = `curl -sL ${getScriptUrl(
-		brew ? "/brew" : ""
-	)} -o /tmp/install-agent.sh && chmod +x /tmp/install-agent.sh && /tmp/install-agent.sh -p ${port} -k "${publicKey}" -t "${token}" -url "${getHubURL()}"`
+	const isCN = !brew && (i18n.locale + navigator.language).includes("zh-CN")
+	const scriptUrl = brew ? getScriptUrl("/brew") : isCN ? FORK_SCRIPT_URL_CN : FORK_SCRIPT_URL
+	let cmd = `curl -sL ${scriptUrl} -o /tmp/install-agent.sh && chmod +x /tmp/install-agent.sh && /tmp/install-agent.sh -p ${port} -k "${publicKey}" -t "${token}" -url "${getHubURL()}"`
 	// brew script does not support --china-mirrors
-	if (!brew && (i18n.locale + navigator.language).includes("zh-CN")) {
+	if (isCN) {
 		cmd += ` --china-mirrors`
 	}
 	copyToClipboard(cmd)
