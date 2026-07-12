@@ -647,6 +647,7 @@ msgstr "Dokumentasjon"
 #: src/components/alerts-history-columns.tsx
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
+#: src/components/systems-table/systems-table.tsx
 #: src/lib/alerts.ts
 msgid "Down"
 msgstr "Nede"
@@ -717,7 +718,6 @@ msgstr "Skriv inn ditt engangspassord."
 msgid "Ephemeral"
 msgstr "Flyktig"
 
-#: src/components/login/auth-form.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/config-yaml.tsx
 #: src/components/routes/settings/heartbeat.tsx
@@ -876,6 +876,10 @@ msgstr "GPU-bruk"
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
 msgstr "Rutenett"
+
+#: src/components/add-system.tsx
+msgid "Group"
+msgstr ""
 
 #: src/components/containers-table/containers-table-columns.tsx
 msgid "Health"
@@ -1164,6 +1168,10 @@ msgstr "Engangspassord"
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Open menu"
 msgstr "Åpne meny"
+
+#: src/components/add-system.tsx
+msgid "Optional"
+msgstr ""
 
 #: src/components/login/auth-form.tsx
 msgid "Or continue with"
@@ -1550,6 +1558,11 @@ msgstr "Swap-plass i bruk av systemet"
 msgid "Swap Usage"
 msgstr "Swap-bruk"
 
+#: src/components/mode-toggle.tsx
+#: src/components/mode-toggle.tsx
+msgid "Switch theme"
+msgstr ""
+
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
@@ -1659,8 +1672,8 @@ msgstr "Til e-postadresse(r)"
 
 #: src/components/mode-toggle.tsx
 #: src/components/mode-toggle.tsx
-msgid "Toggle theme"
-msgstr "Tema av/på"
+#~ msgid "Toggle theme"
+#~ msgstr "Tema av/på"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -1762,6 +1775,10 @@ msgstr "Slår inn når forbruk av hvilken som helst disk overstiger en grensever
 msgid "Type"
 msgstr ""
 
+#: src/components/systems-table/systems-table.tsx
+msgid "Ungrouped"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
 msgstr "Enhetsfil"
@@ -1789,6 +1806,7 @@ msgstr "Ubegrenset"
 #. Context: System is up
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
+#: src/components/systems-table/systems-table.tsx
 msgid "Up"
 msgstr "Oppe"
 

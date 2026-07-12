@@ -31,6 +31,8 @@ export interface SystemRecord extends RecordModel {
 	info: SystemInfo
 	v: string
 	updated: string
+	/** 文件夹/分组，空 = 未分组 */
+	group?: string
 }
 
 export interface SystemInfo {

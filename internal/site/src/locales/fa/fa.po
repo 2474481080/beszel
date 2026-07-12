@@ -647,6 +647,7 @@ msgstr "مستندات"
 #: src/components/alerts-history-columns.tsx
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
+#: src/components/systems-table/systems-table.tsx
 #: src/lib/alerts.ts
 msgid "Down"
 msgstr "قطع"
@@ -717,7 +718,6 @@ msgstr "رمز عبور یک‌بار مصرف خود را وارد کنید."
 msgid "Ephemeral"
 msgstr "گذرا"
 
-#: src/components/login/auth-form.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/config-yaml.tsx
 #: src/components/routes/settings/heartbeat.tsx
@@ -876,6 +876,10 @@ msgstr "میزان استفاده از GPU"
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
 msgstr "جدول"
+
+#: src/components/add-system.tsx
+msgid "Group"
+msgstr ""
 
 #: src/components/containers-table/containers-table-columns.tsx
 msgid "Health"
@@ -1164,6 +1168,10 @@ msgstr "رمز عبور یک‌بار مصرف"
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Open menu"
 msgstr "باز کردن منو"
+
+#: src/components/add-system.tsx
+msgid "Optional"
+msgstr ""
 
 #: src/components/login/auth-form.tsx
 msgid "Or continue with"
@@ -1550,6 +1558,11 @@ msgstr "فضای Swap استفاده شده توسط سیستم"
 msgid "Swap Usage"
 msgstr "میزان استفاده از Swap"
 
+#: src/components/mode-toggle.tsx
+#: src/components/mode-toggle.tsx
+msgid "Switch theme"
+msgstr ""
+
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
@@ -1659,8 +1672,8 @@ msgstr "به ایمیل(ها)"
 
 #: src/components/mode-toggle.tsx
 #: src/components/mode-toggle.tsx
-msgid "Toggle theme"
-msgstr "تغییر تم"
+#~ msgid "Toggle theme"
+#~ msgstr "تغییر تم"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -1762,6 +1775,10 @@ msgstr "هنگامی که استفاده از هر دیسکی از یک آستا
 msgid "Type"
 msgstr "نوع"
 
+#: src/components/systems-table/systems-table.tsx
+msgid "Ungrouped"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
 msgstr "فایل واحد"
@@ -1789,6 +1806,7 @@ msgstr "نامحدود"
 #. Context: System is up
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
+#: src/components/systems-table/systems-table.tsx
 msgid "Up"
 msgstr "فعال"
 

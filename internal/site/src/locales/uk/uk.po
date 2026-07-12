@@ -647,6 +647,7 @@ msgstr "Документація"
 #: src/components/alerts-history-columns.tsx
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
+#: src/components/systems-table/systems-table.tsx
 #: src/lib/alerts.ts
 msgid "Down"
 msgstr "Не працює"
@@ -717,7 +718,6 @@ msgstr "Введіть ваш одноразовий пароль."
 msgid "Ephemeral"
 msgstr "Ефемерний"
 
-#: src/components/login/auth-form.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/config-yaml.tsx
 #: src/components/routes/settings/heartbeat.tsx
@@ -876,6 +876,10 @@ msgstr "Використання GPU"
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
 msgstr "Сітка"
+
+#: src/components/add-system.tsx
+msgid "Group"
+msgstr ""
 
 #: src/components/containers-table/containers-table-columns.tsx
 msgid "Health"
@@ -1164,6 +1168,10 @@ msgstr "Одноразовий пароль"
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Open menu"
 msgstr "Відкрити меню"
+
+#: src/components/add-system.tsx
+msgid "Optional"
+msgstr ""
 
 #: src/components/login/auth-form.tsx
 msgid "Or continue with"
@@ -1550,6 +1558,11 @@ msgstr "Область підкачки, використана системою
 msgid "Swap Usage"
 msgstr "Використання підкачки"
 
+#: src/components/mode-toggle.tsx
+#: src/components/mode-toggle.tsx
+msgid "Switch theme"
+msgstr ""
+
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
@@ -1659,8 +1672,8 @@ msgstr "На електронну пошту"
 
 #: src/components/mode-toggle.tsx
 #: src/components/mode-toggle.tsx
-msgid "Toggle theme"
-msgstr "Перемкнути тему"
+#~ msgid "Toggle theme"
+#~ msgstr "Перемкнути тему"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -1762,6 +1775,10 @@ msgstr "Спрацьовує, коли використання будь-яко�
 msgid "Type"
 msgstr "Тип"
 
+#: src/components/systems-table/systems-table.tsx
+msgid "Ungrouped"
+msgstr ""
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
 msgstr "Файл юніта"
@@ -1789,6 +1806,7 @@ msgstr "Необмежено"
 #. Context: System is up
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
+#: src/components/systems-table/systems-table.tsx
 msgid "Up"
 msgstr "Працює"
 

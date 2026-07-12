@@ -647,6 +647,7 @@ msgstr "文件"
 #: src/components/alerts-history-columns.tsx
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
+#: src/components/systems-table/systems-table.tsx
 #: src/lib/alerts.ts
 msgid "Down"
 msgstr "離線"
@@ -717,7 +718,6 @@ msgstr "輸入您的一次性密碼。"
 msgid "Ephemeral"
 msgstr "臨時"
 
-#: src/components/login/auth-form.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
 #: src/components/routes/settings/config-yaml.tsx
 #: src/components/routes/settings/heartbeat.tsx
@@ -876,6 +876,10 @@ msgstr "GPU 使用率"
 #: src/components/systems-table/systems-table.tsx
 msgid "Grid"
 msgstr "網格"
+
+#: src/components/add-system.tsx
+msgid "Group"
+msgstr "分組"
 
 #: src/components/containers-table/containers-table-columns.tsx
 msgid "Health"
@@ -1164,6 +1168,10 @@ msgstr "一次性密碼"
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Open menu"
 msgstr "開啟選單"
+
+#: src/components/add-system.tsx
+msgid "Optional"
+msgstr "選填"
 
 #: src/components/login/auth-form.tsx
 msgid "Or continue with"
@@ -1550,6 +1558,11 @@ msgstr "系統的虛擬記憶體使用量"
 msgid "Swap Usage"
 msgstr "交換空間使用量"
 
+#: src/components/mode-toggle.tsx
+#: src/components/mode-toggle.tsx
+msgid "Switch theme"
+msgstr ""
+
 #: src/components/add-system.tsx
 #: src/components/alerts-history-columns.tsx
 #: src/components/containers-table/containers-table-columns.tsx
@@ -1659,8 +1672,8 @@ msgstr "發送到電子郵件"
 
 #: src/components/mode-toggle.tsx
 #: src/components/mode-toggle.tsx
-msgid "Toggle theme"
-msgstr "切換主題"
+#~ msgid "Toggle theme"
+#~ msgstr "切換主題"
 
 #: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -1762,6 +1775,10 @@ msgstr "當任何磁碟使用率超過閾值時觸發"
 msgid "Type"
 msgstr "類型"
 
+#: src/components/systems-table/systems-table.tsx
+msgid "Ungrouped"
+msgstr "未分組"
+
 #: src/components/systemd-table/systemd-table.tsx
 msgid "Unit file"
 msgstr "單元檔案"
@@ -1789,6 +1806,7 @@ msgstr "無限制"
 #. Context: System is up
 #: src/components/routes/system/info-bar.tsx
 #: src/components/systems-table/systems-table-columns.tsx
+#: src/components/systems-table/systems-table.tsx
 msgid "Up"
 msgstr "上線"
 

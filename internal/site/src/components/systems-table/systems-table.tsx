@@ -19,14 +19,16 @@ import {
 	ArrowDownIcon,
 	ArrowUpDownIcon,
 	ArrowUpIcon,
+	ChevronDownIcon,
 	EyeIcon,
 	FilterIcon,
+	FolderIcon,
 	LayoutGridIcon,
 	LayoutListIcon,
 	Settings2Icon,
 	XIcon,
 } from "lucide-react"
-import { memo, useEffect, useMemo, useRef, useState } from "react"
+import { memo, type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
 	DropdownMenu,
@@ -52,6 +54,88 @@ import { SystemsTableColumns, ActionsButton, IndicatorDot } from "./systems-tabl
 
 type ViewMode = "table" | "grid"
 type StatusFilter = "all" | SystemRecord["status"]
+
+/** 分组视图的扁平列表项：组头 或 普通系统行 */
+type GroupListItem<T> = { kind: "header"; group: string; total: number; up: number; down: number } | { kind: "row"; row: T }
+
+/** 把排序过滤后的行按 group 字段分桶；没有任何分组时返回 null（走原始渲染） */
+function buildGroupedItems<T extends Row<SystemRecord>>(
+	rows: T[],
+	collapsed: Record<string, boolean>
+): GroupListItem<T>[] | null {
+	const groups = new Map<string, T[]>()
+	let hasGroup = false
+	for (const row of rows) {
+		const group = row.original.group || ""
+		if (group) {
+			hasGroup = true
+		}
+		const list = groups.get(group)
+		if (list) {
+			list.push(row)
+		} else {
+			groups.set(group, [row])
+		}
+	}
+	if (!hasGroup) {
+		return null
+	}
+	// 有名字的组按字母序，未分组排最后
+	const names = [...groups.keys()].sort((a, b) => {
+		if (a === "") return 1
+		if (b === "") return -1
+		return a.localeCompare(b)
+	})
+	const items: GroupListItem<T>[] = []
+	for (const name of names) {
+		const groupRows = groups.get(name)!
+		let up = 0
+		let down = 0
+		for (const row of groupRows) {
+			if (row.original.status === SystemStatus.Up) up++
+			else if (row.original.status === SystemStatus.Down) down++
+		}
+		items.push({ kind: "header", group: name, total: groupRows.length, up, down })
+		if (!collapsed[name || "__ungrouped__"]) {
+			for (const row of groupRows) {
+				items.push({ kind: "row", row })
+			}
+		}
+	}
+	return items
+}
+
+/** 组头：文件夹名 + 简要统计（在线/总数、离线数），点击折叠 */
+function GroupHeaderContent({
+	item,
+	collapsed,
+	onToggle,
+}: {
+	item: { group: string; total: number; up: number; down: number }
+	collapsed: boolean
+	onToggle: () => void
+}) {
+	return (
+		<button
+			type="button"
+			onClick={onToggle}
+			className="flex items-center gap-2 w-full text-start font-medium text-sm py-2 select-none"
+		>
+			<ChevronDownIcon className={cn("size-4 text-muted-foreground transition-transform", collapsed && "-rotate-90")} />
+			<FolderIcon className="size-4 text-muted-foreground" />
+			<span className="truncate">{item.group || <Trans>Ungrouped</Trans>}</span>
+			<span className="text-muted-foreground text-xs tabular-nums ms-1">
+				{item.up}/{item.total} <Trans>Up</Trans>
+			</span>
+			{item.down > 0 && (
+				<span className="text-red-500 text-xs tabular-nums">
+					{item.down} <Trans>Down</Trans>
+				</span>
+			)}
+		</button>
+	)
+}
+
 
 const preloadSystemDetail = runOnce(() => import("@/components/routes/system.tsx"))
 
@@ -127,6 +211,14 @@ export default function SystemsTable() {
 	const rows = table.getRowModel().rows
 	const columns = table.getAllColumns()
 	const visibleColumns = table.getVisibleLeafColumns()
+
+	// 分组折叠状态（跨会话保存）
+	const [groupCollapsed, setGroupCollapsed] = useBrowserStorage<Record<string, boolean>>("groupsCollapsed", {})
+	const toggleGroup = (name: string) => {
+		const key = name || "__ungrouped__"
+		setGroupCollapsed({ ...groupCollapsed, [key]: !groupCollapsed[key] })
+	}
+	const groupedItems = useMemo(() => buildGroupedItems(rows, groupCollapsed), [rows, groupCollapsed])
 
 	const [upSystemsLength, downSystemsLength, pausedSystemsLength] = useMemo(() => {
 		return [Object.values(upSystems).length, Object.values(downSystems).length, Object.values(pausedSystems).length]
@@ -307,7 +399,54 @@ export default function SystemsTable() {
 			{viewMode === "table" ? (
 				// table layout
 				<div className="rounded-md">
-					<AllSystemsTable table={table} rows={rows} colLength={visibleColumns.length} />
+					<AllSystemsTable
+						table={table}
+						rows={rows}
+						colLength={visibleColumns.length}
+						groupedItems={groupedItems}
+						groupCollapsed={groupCollapsed}
+						toggleGroup={toggleGroup}
+					/>
+				</div>
+			) : groupedItems ? (
+				// grid layout, grouped into folder sections
+				<div className="flex flex-col gap-1">
+					{(() => {
+						const sections: ReactNode[] = []
+						let currentHeader: Extract<GroupListItem<Row<SystemRecord>>, { kind: "header" }> | null = null
+						let currentRows: Row<SystemRecord>[] = []
+						const flush = () => {
+							if (!currentHeader) return
+							const header = currentHeader
+							sections.push(
+								<div key={`sec-${header.group}`} className="mb-2">
+									<GroupHeaderContent
+										item={header}
+										collapsed={!!groupCollapsed[header.group || "__ungrouped__"]}
+										onToggle={() => toggleGroup(header.group)}
+									/>
+									{currentRows.length > 0 && (
+										<div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-1">
+											{currentRows.map((row) => (
+												<SystemCard key={row.original.id} row={row} table={table} colLength={visibleColumns.length} />
+											))}
+										</div>
+									)}
+								</div>
+							)
+							currentRows = []
+						}
+						for (const item of groupedItems) {
+							if (item.kind === "header") {
+								flush()
+								currentHeader = item
+							} else {
+								currentRows.push(item.row)
+							}
+						}
+						flush()
+						return sections
+					})()}
 				</div>
 			) : (
 				// grid layout
@@ -328,13 +467,30 @@ export default function SystemsTable() {
 }
 
 const AllSystemsTable = memo(
-	({ table, rows, colLength }: { table: TableType<SystemRecord>; rows: Row<SystemRecord>[]; colLength: number }) => {
+	({
+		table,
+		rows,
+		colLength,
+		groupedItems,
+		groupCollapsed,
+		toggleGroup,
+	}: {
+		table: TableType<SystemRecord>
+		rows: Row<SystemRecord>[]
+		colLength: number
+		groupedItems: GroupListItem<Row<SystemRecord>>[] | null
+		groupCollapsed: Record<string, boolean>
+		toggleGroup: (name: string) => void
+	}) => {
 		// The virtualizer will need a reference to the scrollable container element
 		const scrollRef = useRef<HTMLDivElement>(null)
 
+		// 分组时对"组头+行"的扁平列表做虚拟化，未分组时保持原始行为
+		const items: GroupListItem<Row<SystemRecord>>[] = groupedItems ?? rows.map((row) => ({ kind: "row", row }))
+
 		const virtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
-			count: rows.length,
-			estimateSize: () => (rows.length > 10 ? 56 : 60),
+			count: items.length,
+			estimateSize: (index) => (items[index]?.kind === "header" ? 44 : items.length > 10 ? 56 : 60),
 			getScrollElement: () => scrollRef.current,
 			overscan: 5,
 		})
@@ -348,7 +504,7 @@ const AllSystemsTable = memo(
 				className={cn(
 					"h-min max-h-[calc(100dvh-17rem)] max-w-full relative overflow-auto border rounded-md",
 					// don't set min height if there are less than 2 rows, do set if we need to display the empty state
-					(!rows.length || rows.length > 2) && "min-h-50"
+					(!items.length || items.length > 2) && "min-h-50"
 				)}
 				ref={scrollRef}
 			>
@@ -357,15 +513,29 @@ const AllSystemsTable = memo(
 					<table className="text-sm w-full h-full">
 						<SystemsTableHead table={table} />
 						<TableBody onMouseEnter={preloadSystemDetail}>
-							{rows.length ? (
+							{items.length ? (
 								virtualRows.map((virtualRow) => {
-									const row = rows[virtualRow.index] as Row<SystemRecord>
+									const item = items[virtualRow.index]
+									if (item.kind === "header") {
+										return (
+											<TableRow key={`h-${item.group}`} className="bg-muted/40 hover:bg-muted/60">
+												<TableCell colSpan={colLength} className="py-0 px-3" style={{ height: virtualRow.size }}>
+													<GroupHeaderContent
+														item={item}
+														collapsed={!!groupCollapsed[item.group || "__ungrouped__"]}
+														onToggle={() => toggleGroup(item.group)}
+													/>
+												</TableCell>
+											</TableRow>
+										)
+									}
+									const row = item.row
 									return (
 										<SystemTableRow
 											key={row.id}
 											row={row}
 											virtualRow={virtualRow}
-											length={rows.length}
+											length={items.length}
 											colLength={colLength}
 										/>
 									)

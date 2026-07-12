@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { isReadOnlyUser, pb } from "@/lib/api"
 import { SystemStatus } from "@/lib/enums"
-import { $publicKey } from "@/lib/stores"
+import { $publicKey, $systems } from "@/lib/stores"
 import { cn, generateToken, tokenMap, useBrowserStorage } from "@/lib/utils"
 import type { SystemRecord } from "@/types"
 import {
@@ -66,6 +66,9 @@ let nextSystemToken: string | null = null
  */
 export const SystemDialog = ({ setOpen, system }: { setOpen: (open: boolean) => void; system?: SystemRecord }) => {
 	const publicKey = useStore($publicKey)
+	const allSystems = useStore($systems)
+	// 已有分组名去重，作为分组输入框的候选
+	const existingGroups = [...new Set(allSystems.map((s) => s.group).filter(Boolean))] as string[]
 	const port = useRef<HTMLInputElement>(null)
 	const [hostValue, setHostValue] = useState(system?.host ?? "")
 	const isUnixSocket = hostValue.startsWith("/")
@@ -204,6 +207,17 @@ export const SystemDialog = ({ setOpen, system }: { setOpen: (open: boolean) => 
 							required={!isUnixSocket}
 							className={cn(isUnixSocket && "hidden")}
 						/>
+						<Label htmlFor="group" className="xs:text-end">
+							<Trans>Group</Trans>
+						</Label>
+						<>
+							<Input id="group" name="group" defaultValue={system?.group ?? ""} list="group-options" placeholder={t`Optional`} />
+							<datalist id="group-options">
+								{existingGroups.map((g) => (
+									<option key={g} value={g} />
+								))}
+							</datalist>
+						</>
 						<Label htmlFor="pkey" className="xs:text-end whitespace-pre">
 							<Trans comment="Use 'Key' if your language requires many more characters">Public Key</Trans>
 						</Label>
