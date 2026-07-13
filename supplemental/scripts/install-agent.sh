@@ -1018,7 +1018,34 @@ $(if [ -n "$NVIDIA_DEVICES" ]; then printf "%b" "# NVIDIA device permissions\n${
 WantedBy=multi-user.target
 EOF
   else
-    echo "Systemd service file already exists. Skipping creation."
+    # 二改：unit 已存在时不整体覆盖（避免丢失用户自定义），但连接参数
+    # KEY/TOKEN/HUB_URL/PORT 若有变化则原地更新，解决“重装换了 token 却不生效”。
+    UNIT_FILE=/etc/systemd/system/beszel-agent.service
+    UNIT_CHANGED=0
+    update_env_line() {
+      # $1=键名 $2=新值。用 | 作分隔符避免 URL 里的 / 冲突。
+      key="$1"; val="$2"
+      current=$(grep -oP "Environment=\"${key}=\K[^\"]*" "$UNIT_FILE" | head -1)
+      if [ -z "$current" ]; then
+        # 老 unit 里没有这一行（比如从更老版本升级），补进 [Service] 段
+        sed -i "/^\[Service\]/a Environment=\"${key}=${val}\"" "$UNIT_FILE"
+        UNIT_CHANGED=1
+      elif [ "$current" != "$val" ]; then
+        esc=$(printf '%s' "$val" | sed 's/[&|\\]/\\&/g')
+        sed -i "s|Environment=\"${key}=[^\"]*\"|Environment=\"${key}=${esc}\"|" "$UNIT_FILE"
+        UNIT_CHANGED=1
+      fi
+    }
+    update_env_line PORT "$PORT"
+    update_env_line KEY "$KEY"
+    update_env_line TOKEN "$TOKEN"
+    update_env_line HUB_URL "$HUB_URL"
+    if [ "$UNIT_CHANGED" = "1" ]; then
+      echo "Existing service detected — updated connection settings (KEY/TOKEN/HUB_URL/PORT)."
+      systemctl daemon-reload
+    else
+      echo "Systemd service file already exists and is up to date. Skipping creation."
+    fi
   fi
 
   # 二改版：必检配置文件 + drop-in（已存在则不覆盖）
