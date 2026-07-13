@@ -235,6 +235,7 @@ PORT=45876
 UNINSTALL=false
 GITHUB_URL="https://github.com"
 GITHUB_PROXY_URL=""
+WS_ONLY="false"
 KEY=""
 TOKEN=""
 HUB_URL=""
@@ -256,7 +257,8 @@ case "$1" in
   printf "  --auto-update [VALUE] : Control automatic daily updates\n"
   printf "                          VALUE can be true (enable) or false (disable). If not specified, will prompt.\n"
   printf "  --mirror [URL]        : Use GitHub proxy to resolve network timeout issues in mainland China\n"
-  printf "                          URL: optional custom proxy URL (default: https://gh.beszel.dev)\n"
+  printf "                          URL: optional custom proxy URL (default: https://gh-proxy.com)\n"
+  printf "  --ws-only             : WebSocket 出站模式，SSH 通道只绑 127.0.0.1（内网安全推荐）\n"
   printf "  -h, --help            : Display this help message\n"
   exit 0
   ;;
@@ -337,6 +339,10 @@ while [ $# -gt 0 ]; do
       GITHUB_PROXY_URL="https://gh-proxy.com"
       GITHUB_URL="$(ensure_trailing_slash "$GITHUB_PROXY_URL")https://github.com"
     fi
+    ;;
+  --ws-only)
+    WS_ONLY="true"
+    shift
     ;;
   --auto-update*)
     # Check if there's a value after the = sign
@@ -991,6 +997,7 @@ After=network-online.target
 
 [Service]
 Environment="PORT=$PORT"
+$(if [ "$WS_ONLY" = "true" ]; then printf '%s' "Environment=\"LISTEN=127.0.0.1:$PORT\""; fi)
 Environment="KEY=$KEY"
 Environment="TOKEN=$TOKEN"
 Environment="HUB_URL=$HUB_URL"
@@ -1037,6 +1044,9 @@ EOF
       fi
     }
     update_env_line PORT "$PORT"
+    if [ "$WS_ONLY" = "true" ]; then
+      update_env_line LISTEN "127.0.0.1:$PORT"
+    fi
     update_env_line KEY "$KEY"
     update_env_line TOKEN "$TOKEN"
     update_env_line HUB_URL "$HUB_URL"
