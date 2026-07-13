@@ -342,7 +342,6 @@ while [ $# -gt 0 ]; do
     ;;
   --ws-only)
     WS_ONLY="true"
-    shift
     ;;
   --auto-update*)
     # Check if there's a value after the = sign
