@@ -323,8 +323,9 @@ while [ $# -gt 0 ]; do
         GITHUB_PROXY_URL="$CUSTOM_PROXY"
         GITHUB_URL="$(ensure_trailing_slash "$CUSTOM_PROXY")https://github.com"
       else
-        GITHUB_PROXY_URL="https://gh.beszel.dev"
-        GITHUB_URL="$GITHUB_PROXY_URL"
+        # 二改：默认镜像用公共代理（gh.beszel.dev 是官方私有代理，不给 fork 用）
+        GITHUB_PROXY_URL="https://gh-proxy.com"
+        GITHUB_URL="$(ensure_trailing_slash "$GITHUB_PROXY_URL")https://github.com"
       fi
     elif [ "$2" != "" ] && ! echo "$2" | grep -q '^-'; then
       # use custom proxy URL provided as next argument
@@ -333,8 +334,8 @@ while [ $# -gt 0 ]; do
       shift
     else
       # No value specified, use default
-      GITHUB_PROXY_URL="https://gh.beszel.dev"
-      GITHUB_URL="$GITHUB_PROXY_URL"
+      GITHUB_PROXY_URL="https://gh-proxy.com"
+      GITHUB_URL="$(ensure_trailing_slash "$GITHUB_PROXY_URL")https://github.com"
     fi
     ;;
   --auto-update*)
@@ -649,9 +650,18 @@ fi
 
 # Determine version to install
 if [ "$VERSION" = "latest" ]; then
-  # 二改版：直接查 fork 的 GitHub API（不走 get.beszel.dev，它指向官方仓库）
-  API_RELEASE_URL="https://api.github.com/repos/2474481080/beszel/releases/latest"
-  INSTALL_VERSION=$(curl -s "$API_RELEASE_URL" | grep -o '"tag_name": "v[^"]*"' | cut -d'"' -f4 | tr -d 'v')
+  # 二改版：查 fork 最新版本。镜像模式先经代理解析 releases/latest 跳转，
+  # 直连模式或代理失败时回退官方 API。
+  INSTALL_VERSION=""
+  if [ -n "$GITHUB_PROXY_URL" ]; then
+    # 代理拿 latest 跳转后的最终 URL，形如 .../releases/tag/v0.18.9
+    LATEST_URL=$(curl -sI "$GITHUB_URL/2474481080/beszel/releases/latest" | tr -d '\r' | grep -i '^location:' | tail -1 | sed 's/^[Ll]ocation: *//')
+    INSTALL_VERSION=$(echo "$LATEST_URL" | grep -o 'v[0-9][^/]*$' | tr -d 'v')
+  fi
+  if [ -z "$INSTALL_VERSION" ]; then
+    API_RELEASE_URL="https://api.github.com/repos/2474481080/beszel/releases/latest"
+    INSTALL_VERSION=$(curl -s "$API_RELEASE_URL" | grep -o '"tag_name": "v[^"]*"' | cut -d'"' -f4 | tr -d 'v')
+  fi
   if [ -z "$INSTALL_VERSION" ]; then
     echo "Failed to get latest version"
     exit 1
